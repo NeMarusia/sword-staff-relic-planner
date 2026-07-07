@@ -5,10 +5,10 @@ const LEGACY_STORAGE_KEY = "sxs-relic-planner-v1";
 
 const RU = {
   rarity: {
-    Rainbow: "Радужная",
-    SSR: "SSR",
-    SR: "SR",
-    R: "R",
+    Rainbow: "Мифическая",
+    SSR: "Легендарная",
+    SR: "Эпическая",
+    R: "Редкая",
     W: "Обычная"
   },
   element: {
@@ -45,9 +45,10 @@ const RU = {
   },
   source: {
     Aethyris: "Этерис",
-    Aqualis: "Аквалис",
+    Aqualis: "Обитель вод",
     "Cinder Ridge": "Пепельный хребет",
-    Hapadi: "Хапади"
+    Hapadi: "Зеленая роща",
+    Verdantglade: "Зеленая роща"
   },
   name: {
     "Godly Codex": "Божественный кодекс",
@@ -209,6 +210,10 @@ const RARITY_ORDER = {
   W: 1
 };
 
+const SOURCE_ALIASES = {
+  Hapadi: "Verdantglade"
+};
+
 const state = {
   relics: [],
   owned: {},
@@ -346,7 +351,8 @@ function localiseName(relic) {
 }
 
 function getSource(relic) {
-  return relic.source || relic.region || "";
+  const source = relic.source || relic.region || "";
+  return SOURCE_ALIASES[source] || source;
 }
 
 function localiseSource(source) {
