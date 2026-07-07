@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sword x Staff Relic Planner</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Sword x Staff</p>
+        <h1>Relic Planner</h1>
+      </div>
+      <div class="status" id="dataStatus">Загрузка базы...</div>
+    </header>
+
+    <main class="layout">
+      <aside class="panel controls">
+        <section>
+          <h2>Класс</h2>
+          <div class="class-grid" id="classButtons"></div>
+        </section>
+
+        <section>
+          <h2>Фильтры</h2>
+          <label class="field">
+            <span>Поиск</span>
+            <input id="searchInput" type="search" placeholder="Название, стат, сет">
+          </label>
+          <label class="field">
+            <span>Элемент</span>
+            <select id="elementFilter"></select>
+          </label>
+          <label class="field">
+            <span>Стат</span>
+            <select id="statFilter"></select>
+          </label>
+          <label class="checkline">
+            <input id="ownedOnly" type="checkbox">
+            <span>Показывать только мои</span>
+          </label>
+        </section>
+
+        <section>
+          <h2>Инвентарь</h2>
+          <div class="mini-stats">
+            <div><strong id="ownedCount">0</strong><span>отмечено</span></div>
+            <div><strong id="visibleCount">0</strong><span>на экране</span></div>
+          </div>
+          <div class="button-row">
+            <button id="clearFilters" type="button" title="Сбросить фильтры">Сбросить фильтры</button>
+            <button id="clearOwned" type="button" title="Очистить отмеченные реликвии">Очистить мои</button>
+          </div>
+        </section>
+
+        <section class="note">
+          Рекомендации считаются эвристикой по открытым данным: вес статов, элемент, редкость,
+          сетовые бонусы и твоя прокачка. Это не точный симулятор боя.
+        </section>
+      </aside>
+
+      <section class="content">
+        <section class="recommendations">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Рекомендация</p>
+              <h2 id="recommendTitle">Лучшие реликвии</h2>
+            </div>
+            <div class="hint">Сначала отметь реликвии, которые есть</div>
+          </div>
+          <div class="recommend-grid" id="recommendations"></div>
+        </section>
+
+        <section class="relics">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">База</p>
+              <h2>Все реликвии</h2>
+            </div>
+          </div>
+          <div class="relic-grid" id="relicGrid"></div>
+        </section>
+      </section>
+    </main>
+
+    <template id="relicTemplate">
+      <article class="relic-card">
+        <button class="owned-toggle" type="button" title="Отметить реликвию"></button>
+        <div class="relic-art-wrap">
+          <img class="relic-art" alt="" loading="lazy">
+        </div>
+        <div class="relic-body">
+          <div class="relic-title-row">
+            <h3></h3>
+            <span class="score"></span>
+          </div>
+          <div class="tags"></div>
+          <div class="setline"></div>
+          <label class="level-field">
+            <span>Прокачка</span>
+            <input class="level-input" type="number" min="0" max="100" step="1">
+          </label>
+        </div>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
