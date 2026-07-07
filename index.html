@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sword x Staff Relic Planner</title>
+    <title>Sword x Staff: база реликвий</title>
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
     <header class="topbar">
       <div>
         <p class="eyebrow">Sword x Staff</p>
-        <h1>Relic Planner</h1>
+        <h1>База реликвий</h1>
       </div>
       <div class="status" id="dataStatus">Загрузка базы...</div>
     </header>
@@ -18,7 +18,7 @@
     <main class="layout">
       <aside class="panel controls">
         <section>
-          <h2>Класс</h2>
+          <h2>Для кого считать</h2>
           <div class="class-grid" id="classButtons"></div>
         </section>
 
@@ -35,6 +35,10 @@
           <label class="field">
             <span>Стат</span>
             <select id="statFilter"></select>
+          </label>
+          <label class="field">
+            <span>Где добывается</span>
+            <select id="sourceFilter"></select>
           </label>
           <label class="checkline">
             <input id="ownedOnly" type="checkbox">
@@ -55,8 +59,8 @@
         </section>
 
         <section class="note">
-          Рекомендации считаются эвристикой по открытым данным: вес статов, элемент, редкость,
-          сетовые бонусы и твоя прокачка. Это не точный симулятор боя.
+          Названия и статы переведены отдельным словарём поверх англоязычной базы. Если русское
+          название неизвестно, карточка сохраняет оригинал в поиске.
         </section>
       </aside>
 
@@ -64,10 +68,10 @@
         <section class="recommendations">
           <div class="section-head">
             <div>
-              <p class="eyebrow">Рекомендация</p>
-              <h2 id="recommendTitle">Лучшие реликвии</h2>
+              <p class="eyebrow">Подбор</p>
+              <h2 id="recommendTitle">Что качать из отмеченного</h2>
             </div>
-            <div class="hint">Сначала отметь реликвии, которые есть</div>
+            <div class="hint" id="recommendHint">Сначала отметь реликвии, которые есть</div>
           </div>
           <div class="recommend-grid" id="recommendations"></div>
         </section>
@@ -76,7 +80,7 @@
           <div class="section-head">
             <div>
               <p class="eyebrow">База</p>
-              <h2>Все реликвии</h2>
+              <h2>Реликвии по месту получения</h2>
             </div>
           </div>
           <div class="relic-grid" id="relicGrid"></div>
@@ -99,8 +103,9 @@
           <div class="setline"></div>
           <label class="level-field">
             <span>Прокачка</span>
-            <input class="level-input" type="number" min="0" max="100" step="1">
+            <input class="level-input" type="number" min="0" max="100" step="1" inputmode="numeric">
           </label>
+          <div class="source-line"></div>
         </div>
       </article>
     </template>

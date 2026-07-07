@@ -205,7 +205,7 @@ select {
 }
 
 .recommend-grid,
-.relic-grid {
+.group-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(218px, 1fr));
   gap: 12px;
@@ -214,6 +214,26 @@ select {
 
 .recommend-grid {
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.relic-grid {
+  display: grid;
+  gap: 16px;
+  padding: 14px;
+}
+
+.source-group {
+  display: grid;
+  gap: 10px;
+}
+
+.source-group > h3 {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.group-grid {
+  padding: 0;
 }
 
 .relic-card {
@@ -331,6 +351,12 @@ select {
   line-height: 1.35;
 }
 
+.source-line {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .level-field {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -343,6 +369,15 @@ select {
 .level-input {
   min-height: 30px;
   padding: 4px 7px;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  padding: 18px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: #13171a;
 }
 
 @media (max-width: 880px) {
@@ -362,7 +397,7 @@ select {
     flex-direction: column;
   }
 
-  .relic-grid,
+  .group-grid,
   .recommend-grid {
     grid-template-columns: 1fr;
   }

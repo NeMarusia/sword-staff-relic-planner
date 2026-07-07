@@ -1,6 +1,67 @@
 const API_URL = "https://lootandwaifus.com/api/swordxstaff/treasures.json";
 const ICON_BASE = "https://lootandwaifus.com/treasures/swordxstaff/";
-const STORAGE_KEY = "sxs-relic-planner-v1";
+const STORAGE_KEY = "sxs-relic-planner-v2";
+const LEGACY_STORAGE_KEY = "sxs-relic-planner-v1";
+
+const RU = {
+  rarity: {
+    Rainbow: "Радужная",
+    SSR: "SSR",
+    SR: "SR",
+    R: "R",
+    W: "Обычная"
+  },
+  element: {
+    Dark: "Тьма",
+    Fire: "Огонь",
+    Light: "Свет",
+    Water: "Вода",
+    Wind: "Ветер",
+    Earth: "Земля"
+  },
+  stat: {
+    ATK: "АТК",
+    DEF: "ЗАЩ",
+    HP: "ОЗ",
+    SPD: "Скорость",
+    Accuracy: "Точность",
+    "Basic Dispatch Rewards": "Базовые награды отправки",
+    "Block Efficiency": "Эффективность блока",
+    "Block Rate": "Шанс блока",
+    "Bonus DMG against Flamoenix": "Бонус урона по Пламофениксу",
+    "Bonus DMG against Primordial Loong": "Бонус урона по Изначальному Луну",
+    "Bonus DMG against Storm Griffin": "Бонус урона по Штормовому грифону",
+    "Bonus DMG against Yamata no Orochi": "Бонус урона по Ямато-но-Ороти",
+    "Crit DMG": "Крит. урон",
+    "Crit RES": "Сопр. криту",
+    "Crit Rate": "Шанс крита",
+    "Destiny Fruit Growth SPD": "Скорость роста плода судьбы",
+    "DMG Boost": "Усиление урона",
+    "DMG RES": "Снижение урона",
+    "Effect Hit Rate": "Шанс эффекта",
+    "Effect RES": "Сопр. эффектам",
+    "Elemental Mastery": "Мастерство стихий",
+    "Physical Mastery": "Физическое мастерство"
+  },
+  source: {
+    Aethyris: "Этерис",
+    Aqualis: "Аквалис",
+    "Cinder Ridge": "Пепельный хребет",
+    Hapadi: "Хапади"
+  },
+  name: {
+    "Godly Codex": "Божественный кодекс",
+    "Pinnacle Radiance": "Вершинное сияние",
+    "Horn of Abundance": "Корона освобождения",
+    "Skymending Stone": "Камень небесного шва",
+    "Lava Fossil": "Лавовый окаменелый череп",
+    "Multiverse Key": "Ключ мультивселенной",
+    "Colorful Realm": "Цветной мир",
+    "Oracle Codex": "Кодекс оракула",
+    "Luminous Mushroom Cap": "Шляпка светящегося гриба",
+    "Glowing Mushroom Cap": "Шляпка светящегося гриба"
+  }
+};
 
 const FALLBACK_RELICS = [
   {
@@ -147,6 +208,7 @@ const state = {
   search: "",
   element: "all",
   stat: "all",
+  source: "all",
   ownedOnly: false
 };
 
@@ -156,12 +218,14 @@ const els = {
   searchInput: document.querySelector("#searchInput"),
   elementFilter: document.querySelector("#elementFilter"),
   statFilter: document.querySelector("#statFilter"),
+  sourceFilter: document.querySelector("#sourceFilter"),
   ownedOnly: document.querySelector("#ownedOnly"),
   ownedCount: document.querySelector("#ownedCount"),
   visibleCount: document.querySelector("#visibleCount"),
   clearFilters: document.querySelector("#clearFilters"),
   clearOwned: document.querySelector("#clearOwned"),
   recommendTitle: document.querySelector("#recommendTitle"),
+  recommendHint: document.querySelector("#recommendHint"),
   recommendations: document.querySelector("#recommendations"),
   relicGrid: document.querySelector("#relicGrid"),
   template: document.querySelector("#relicTemplate")
@@ -169,7 +233,7 @@ const els = {
 
 function loadState() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY) || "{}");
     state.owned = saved.owned || {};
     state.className = saved.className || state.className;
   } catch {
@@ -188,7 +252,8 @@ function normaliseRelic(relic) {
   return {
     ...relic,
     stats: relic.stats || [],
-    set_bonus: relic.set_bonus || []
+    set_bonus: relic.set_bonus || [],
+    source: relic.source || relic.region || ""
   };
 }
 
@@ -204,17 +269,19 @@ async function fetchRelics() {
   state.relics = relics.map(normaliseRelic);
 }
 
-function fillSelect(select, values, allLabel) {
+function fillSelect(select, values, allLabel, labelFor) {
   select.innerHTML = "";
   select.append(new Option(allLabel, "all"));
-  values.forEach((value) => select.append(new Option(value, value)));
+  values.forEach((value) => select.append(new Option(labelFor(value), value)));
 }
 
 function initFilters() {
   const elements = [...new Set(state.relics.map((relic) => relic.element).filter(Boolean))].sort();
   const stats = [...new Set(state.relics.flatMap((relic) => relic.stats).filter(Boolean))].sort();
-  fillSelect(els.elementFilter, elements, "Все элементы");
-  fillSelect(els.statFilter, stats, "Все статы");
+  const sources = [...new Set(state.relics.map(getSource).filter(Boolean))].sort();
+  fillSelect(els.elementFilter, elements, "Все элементы", (value) => localise(value, "element"));
+  fillSelect(els.statFilter, stats, "Все статы", (value) => localise(value, "stat"));
+  fillSelect(els.sourceFilter, sources, "Все места", localiseSource);
 }
 
 function initClasses() {
@@ -255,6 +322,23 @@ function setLevel(id, level) {
   updateCounters(getFilteredRelics().length);
 }
 
+function localise(value, kind) {
+  return RU[kind]?.[value] || value || "Нет данных";
+}
+
+function localiseName(relic) {
+  return RU.name[relic.name] || relic.name;
+}
+
+function getSource(relic) {
+  return relic.source || relic.region || "";
+}
+
+function localiseSource(source) {
+  if (!source) return "Источник не указан";
+  return RU.source[source] || source;
+}
+
 function statScore(relic, rule) {
   return relic.stats.reduce((sum, stat) => sum + (rule.stats[stat] || 0), 0);
 }
@@ -285,15 +369,23 @@ function getFilteredRelics() {
     if (state.ownedOnly && !owned) return false;
     if (state.element !== "all" && relic.element !== state.element) return false;
     if (state.stat !== "all" && !relic.stats.includes(state.stat)) return false;
+    if (state.source !== "all" && getSource(relic) !== state.source) return false;
     if (!query) return true;
 
+    const setBonus = relic.set_bonus.flat();
     const haystack = [
       relic.name,
+      localiseName(relic),
       relic.rarity,
+      localise(relic.rarity, "rarity"),
       relic.element,
-      relic.region,
+      localise(relic.element, "element"),
+      getSource(relic),
+      localiseSource(getSource(relic)),
       relic.stats.join(" "),
-      relic.set_bonus.flat().join(" ")
+      relic.stats.map((stat) => localise(stat, "stat")).join(" "),
+      setBonus.join(" "),
+      setBonus.map((stat) => localise(stat, "stat")).join(" ")
     ].join(" ").toLowerCase();
     return haystack.includes(query);
   });
@@ -316,23 +408,24 @@ function renderRelicCard(relic, options = {}) {
 
   const img = fragment.querySelector(".relic-art");
   img.src = `${ICON_BASE}${relic.icon}`;
-  img.alt = relic.name;
+  img.alt = localiseName(relic);
   img.addEventListener("error", () => {
     img.removeAttribute("src");
-    img.alt = `${relic.name}: картинка не загрузилась`;
+    img.alt = `${localiseName(relic)}: картинка не загрузилась`;
   });
 
-  fragment.querySelector("h3").textContent = relic.name;
-  fragment.querySelector(".score").textContent = scoreRelic(relic);
+  fragment.querySelector("h3").textContent = localiseName(relic);
+  fragment.querySelector(".score").remove();
 
   const tags = fragment.querySelector(".tags");
-  tags.append(makeTag(relic.rarity));
-  tags.append(makeTag(relic.element, relic.element));
-  relic.stats.forEach((stat) => tags.append(makeTag(stat)));
+  tags.append(makeTag(localise(relic.rarity, "rarity")));
+  tags.append(makeTag(localise(relic.element, "element"), relic.element));
+  relic.stats.forEach((stat) => tags.append(makeTag(localise(stat, "stat"))));
 
   const setline = fragment.querySelector(".setline");
-  const bonus = relic.set_bonus.flat().join(" / ");
-  setline.textContent = bonus ? `Сет: ${bonus}` : "Сет: нет данных";
+  const bonus = relic.set_bonus.flat().map((stat) => localise(stat, "stat")).join(" / ");
+  setline.textContent = bonus ? `Комплект: ${bonus}` : "Комплект: нет данных";
+  fragment.querySelector(".source-line").textContent = `Источник: ${localiseSource(getSource(relic))}`;
 
   const toggle = fragment.querySelector(".owned-toggle");
   toggle.addEventListener("click", () => setOwned(relic.id, !owned));
@@ -346,9 +439,8 @@ function renderRelicCard(relic, options = {}) {
 }
 
 function getRecommendedRelics() {
-  const ownedRelics = state.relics.filter((relic) => getOwnedRecord(relic.id));
-  const source = ownedRelics.length ? ownedRelics : state.relics;
-  return [...source]
+  return state.relics
+    .filter((relic) => getOwnedRecord(relic.id))
     .sort((a, b) => scoreRelic(b) - scoreRelic(a))
     .slice(0, 8);
 }
@@ -356,8 +448,19 @@ function getRecommendedRelics() {
 function renderRecommendations() {
   const rule = CLASS_RULES[state.className];
   const hasOwned = Object.keys(state.owned).length > 0;
-  els.recommendTitle.textContent = `${rule.label}: лучшие ${hasOwned ? "из твоих" : "в базе"}`;
+  els.recommendTitle.textContent = `${rule.label}: что качать из отмеченного`;
+  els.recommendHint.textContent = hasOwned
+    ? "Сортировка по статам, стихии, комплекту и прокачке"
+    : "Сначала отметь реликвии, которые есть";
   els.recommendations.innerHTML = "";
+
+  if (!hasOwned) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "Отмеченных реликвий пока нет, поэтому подбор не строится.";
+    els.recommendations.append(empty);
+    return;
+  }
 
   getRecommendedRelics().forEach((relic) => {
     els.recommendations.append(renderRelicCard(relic, { recommended: true }));
@@ -369,10 +472,42 @@ function updateCounters(visibleCount) {
   els.visibleCount.textContent = visibleCount;
 }
 
+function groupBySource(relics) {
+  const groups = new Map();
+  relics.forEach((relic) => {
+    const source = getSource(relic);
+    if (!groups.has(source)) groups.set(source, []);
+    groups.get(source).push(relic);
+  });
+  return groups;
+}
+
 function renderRelics() {
   const filtered = getFilteredRelics().sort((a, b) => scoreRelic(b) - scoreRelic(a));
   els.relicGrid.innerHTML = "";
-  filtered.forEach((relic) => els.relicGrid.append(renderRelicCard(relic)));
+  const groups = groupBySource(filtered);
+
+  if (!filtered.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "По текущим фильтрам ничего не найдено.";
+    els.relicGrid.append(empty);
+    updateCounters(0);
+    return;
+  }
+
+  groups.forEach((relics, source) => {
+    const group = document.createElement("section");
+    group.className = "source-group";
+    const title = document.createElement("h3");
+    title.textContent = localiseSource(source);
+    group.append(title);
+    const grid = document.createElement("div");
+    grid.className = "group-grid";
+    relics.forEach((relic) => grid.append(renderRelicCard(relic)));
+    group.append(grid);
+    els.relicGrid.append(group);
+  });
   updateCounters(filtered.length);
 }
 
@@ -395,6 +530,10 @@ function bindEvents() {
     state.stat = els.statFilter.value;
     renderRelics();
   });
+  els.sourceFilter.addEventListener("change", () => {
+    state.source = els.sourceFilter.value;
+    renderRelics();
+  });
   els.ownedOnly.addEventListener("change", () => {
     state.ownedOnly = els.ownedOnly.checked;
     renderRelics();
@@ -403,10 +542,12 @@ function bindEvents() {
     state.search = "";
     state.element = "all";
     state.stat = "all";
+    state.source = "all";
     state.ownedOnly = false;
     els.searchInput.value = "";
     els.elementFilter.value = "all";
     els.statFilter.value = "all";
+    els.sourceFilter.value = "all";
     els.ownedOnly.checked = false;
     renderRelics();
   });
