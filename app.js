@@ -509,6 +509,30 @@ function groupBySource(relics) {
   return groups;
 }
 
+function groupByElement(relics) {
+  const groups = new Map();
+  relics.forEach((relic) => {
+    const element = relic.element || "";
+    if (!groups.has(element)) groups.set(element, []);
+    groups.get(element).push(relic);
+  });
+  return groups;
+}
+
+function getRelicGroups(relics) {
+  if (state.ownedOnly) {
+    return {
+      groups: groupByElement(relics),
+      labelFor: (element) => localise(element, "element")
+    };
+  }
+
+  return {
+    groups: groupBySource(relics),
+    labelFor: localiseSource
+  };
+}
+
 function compareRelics(a, b) {
   if (state.sortMode === "rarity") {
     return rarityRank(b.rarity) - rarityRank(a.rarity) || scoreRelic(b) - scoreRelic(a) || localiseName(a).localeCompare(localiseName(b), "ru");
@@ -522,7 +546,7 @@ function compareRelics(a, b) {
 function renderRelics() {
   const filtered = getFilteredRelics().sort(compareRelics);
   els.relicGrid.innerHTML = "";
-  const groups = groupBySource(filtered);
+  const { groups, labelFor } = getRelicGroups(filtered);
 
   if (!filtered.length) {
     const empty = document.createElement("div");
@@ -533,11 +557,11 @@ function renderRelics() {
     return;
   }
 
-  groups.forEach((relics, source) => {
+  groups.forEach((relics, groupKey) => {
     const group = document.createElement("section");
     group.className = "source-group";
     const title = document.createElement("h3");
-    title.textContent = localiseSource(source);
+    title.textContent = labelFor(groupKey);
     group.append(title);
     const grid = document.createElement("div");
     grid.className = "group-grid";
