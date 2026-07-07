@@ -14,6 +14,11 @@
   --light: #e9d77d;
   --water: #5db3e7;
   --wind: #72c58a;
+  --rarity-rainbow: #f2bd63;
+  --rarity-ssr: #b66dff;
+  --rarity-sr: #72c9ff;
+  --rarity-r: #61d58c;
+  --rarity-w: #9da7b0;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -248,6 +253,30 @@ select {
   padding: 10px;
 }
 
+.relic-card[data-rarity="Rainbow"] {
+  border-color: rgba(242, 189, 99, 0.85);
+  background: linear-gradient(135deg, rgba(242, 189, 99, 0.12), #15191d 44%);
+}
+
+.relic-card[data-rarity="SSR"] {
+  border-color: rgba(182, 109, 255, 0.78);
+  background: linear-gradient(135deg, rgba(182, 109, 255, 0.13), #15191d 44%);
+}
+
+.relic-card[data-rarity="SR"] {
+  border-color: rgba(114, 201, 255, 0.72);
+  background: linear-gradient(135deg, rgba(114, 201, 255, 0.12), #15191d 44%);
+}
+
+.relic-card[data-rarity="R"] {
+  border-color: rgba(97, 213, 140, 0.68);
+  background: linear-gradient(135deg, rgba(97, 213, 140, 0.11), #15191d 44%);
+}
+
+.relic-card[data-rarity="W"] {
+  border-color: rgba(157, 167, 176, 0.62);
+}
+
 .relic-card.owned {
   border-color: var(--accent);
   box-shadow: inset 0 0 0 1px rgba(82, 199, 184, 0.25);
@@ -289,6 +318,26 @@ select {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: radial-gradient(circle at 50% 35%, #303840, #111416 70%);
+}
+
+.relic-card[data-rarity="Rainbow"] .relic-art-wrap {
+  border-color: rgba(242, 189, 99, 0.55);
+  background: radial-gradient(circle at 50% 35%, rgba(242, 189, 99, 0.45), #111416 72%);
+}
+
+.relic-card[data-rarity="SSR"] .relic-art-wrap {
+  border-color: rgba(182, 109, 255, 0.5);
+  background: radial-gradient(circle at 50% 35%, rgba(182, 109, 255, 0.44), #111416 72%);
+}
+
+.relic-card[data-rarity="SR"] .relic-art-wrap {
+  border-color: rgba(114, 201, 255, 0.48);
+  background: radial-gradient(circle at 50% 35%, rgba(114, 201, 255, 0.38), #111416 72%);
+}
+
+.relic-card[data-rarity="R"] .relic-art-wrap {
+  border-color: rgba(97, 213, 140, 0.44);
+  background: radial-gradient(circle at 50% 35%, rgba(97, 213, 140, 0.34), #111416 72%);
 }
 
 .relic-art {
@@ -344,6 +393,17 @@ select {
 .tag.Light { color: var(--light); }
 .tag.Water { color: var(--water); }
 .tag.Wind { color: var(--wind); }
+
+.rarity-tag {
+  border-color: currentColor;
+  font-weight: 800;
+}
+
+.rarity-Rainbow { color: var(--rarity-rainbow); }
+.rarity-SSR { color: var(--rarity-ssr); }
+.rarity-SR { color: var(--rarity-sr); }
+.rarity-R { color: var(--rarity-r); }
+.rarity-W { color: var(--rarity-w); }
 
 .setline {
   color: var(--muted);

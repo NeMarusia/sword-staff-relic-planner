@@ -201,6 +201,14 @@ const RARITY_SCORE = {
   W: 1
 };
 
+const RARITY_ORDER = {
+  Rainbow: 5,
+  SSR: 4,
+  SR: 3,
+  R: 2,
+  W: 1
+};
+
 const state = {
   relics: [],
   owned: {},
@@ -208,7 +216,9 @@ const state = {
   search: "",
   element: "all",
   stat: "all",
+  rarity: "all",
   source: "all",
+  sortMode: "score",
   ownedOnly: false
 };
 
@@ -218,7 +228,9 @@ const els = {
   searchInput: document.querySelector("#searchInput"),
   elementFilter: document.querySelector("#elementFilter"),
   statFilter: document.querySelector("#statFilter"),
+  rarityFilter: document.querySelector("#rarityFilter"),
   sourceFilter: document.querySelector("#sourceFilter"),
+  sortMode: document.querySelector("#sortMode"),
   ownedOnly: document.querySelector("#ownedOnly"),
   ownedCount: document.querySelector("#ownedCount"),
   visibleCount: document.querySelector("#visibleCount"),
@@ -278,9 +290,12 @@ function fillSelect(select, values, allLabel, labelFor) {
 function initFilters() {
   const elements = [...new Set(state.relics.map((relic) => relic.element).filter(Boolean))].sort();
   const stats = [...new Set(state.relics.flatMap((relic) => relic.stats).filter(Boolean))].sort();
+  const rarities = [...new Set(state.relics.map((relic) => relic.rarity).filter(Boolean))]
+    .sort((a, b) => rarityRank(b) - rarityRank(a));
   const sources = [...new Set(state.relics.map(getSource).filter(Boolean))].sort();
   fillSelect(els.elementFilter, elements, "Все элементы", (value) => localise(value, "element"));
   fillSelect(els.statFilter, stats, "Все статы", (value) => localise(value, "stat"));
+  fillSelect(els.rarityFilter, rarities, "Любая редкость", (value) => localise(value, "rarity"));
   fillSelect(els.sourceFilter, sources, "Все места", localiseSource);
 }
 
@@ -339,6 +354,10 @@ function localiseSource(source) {
   return RU.source[source] || source;
 }
 
+function rarityRank(rarity) {
+  return RARITY_ORDER[rarity] || 0;
+}
+
 function statScore(relic, rule) {
   return relic.stats.reduce((sum, stat) => sum + (rule.stats[stat] || 0), 0);
 }
@@ -369,6 +388,7 @@ function getFilteredRelics() {
     if (state.ownedOnly && !owned) return false;
     if (state.element !== "all" && relic.element !== state.element) return false;
     if (state.stat !== "all" && !relic.stats.includes(state.stat)) return false;
+    if (state.rarity !== "all" && relic.rarity !== state.rarity) return false;
     if (state.source !== "all" && getSource(relic) !== state.source) return false;
     if (!query) return true;
 
@@ -405,6 +425,7 @@ function renderRelicCard(relic, options = {}) {
 
   card.classList.toggle("owned", Boolean(owned));
   card.classList.toggle("recommended", Boolean(options.recommended));
+  card.dataset.rarity = relic.rarity || "";
 
   const img = fragment.querySelector(".relic-art");
   img.src = `${ICON_BASE}${relic.icon}`;
@@ -418,7 +439,7 @@ function renderRelicCard(relic, options = {}) {
   fragment.querySelector(".score").remove();
 
   const tags = fragment.querySelector(".tags");
-  tags.append(makeTag(localise(relic.rarity, "rarity")));
+  tags.append(makeTag(localise(relic.rarity, "rarity"), `rarity-tag rarity-${relic.rarity}`));
   tags.append(makeTag(localise(relic.element, "element"), relic.element));
   relic.stats.forEach((stat) => tags.append(makeTag(localise(stat, "stat"))));
 
@@ -482,8 +503,18 @@ function groupBySource(relics) {
   return groups;
 }
 
+function compareRelics(a, b) {
+  if (state.sortMode === "rarity") {
+    return rarityRank(b.rarity) - rarityRank(a.rarity) || scoreRelic(b) - scoreRelic(a) || localiseName(a).localeCompare(localiseName(b), "ru");
+  }
+  if (state.sortMode === "name") {
+    return localiseName(a).localeCompare(localiseName(b), "ru") || rarityRank(b.rarity) - rarityRank(a.rarity);
+  }
+  return scoreRelic(b) - scoreRelic(a) || rarityRank(b.rarity) - rarityRank(a.rarity) || localiseName(a).localeCompare(localiseName(b), "ru");
+}
+
 function renderRelics() {
-  const filtered = getFilteredRelics().sort((a, b) => scoreRelic(b) - scoreRelic(a));
+  const filtered = getFilteredRelics().sort(compareRelics);
   els.relicGrid.innerHTML = "";
   const groups = groupBySource(filtered);
 
@@ -530,8 +561,16 @@ function bindEvents() {
     state.stat = els.statFilter.value;
     renderRelics();
   });
+  els.rarityFilter.addEventListener("change", () => {
+    state.rarity = els.rarityFilter.value;
+    renderRelics();
+  });
   els.sourceFilter.addEventListener("change", () => {
     state.source = els.sourceFilter.value;
+    renderRelics();
+  });
+  els.sortMode.addEventListener("change", () => {
+    state.sortMode = els.sortMode.value;
     renderRelics();
   });
   els.ownedOnly.addEventListener("change", () => {
@@ -542,12 +581,16 @@ function bindEvents() {
     state.search = "";
     state.element = "all";
     state.stat = "all";
+    state.rarity = "all";
     state.source = "all";
+    state.sortMode = "score";
     state.ownedOnly = false;
     els.searchInput.value = "";
     els.elementFilter.value = "all";
     els.statFilter.value = "all";
+    els.rarityFilter.value = "all";
     els.sourceFilter.value = "all";
+    els.sortMode.value = "score";
     els.ownedOnly.checked = false;
     renderRelics();
   });
